@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────
+# .github/workflows/scrape.yml
+# ─────────────────────────────────────────────────────────────
+# Runs the job scraper every 2 hours automatically.
+# FREE on public GitHub repos (unlimited minutes).
+#
+# SETUP:
+#   1. Push this project to a public GitHub repo
+#   2. Go to repo → Settings → Secrets and variables → Actions
+#   3. Click "New repository secret"
+#   4. Name: GEMINI_API_KEY  |  Value: your key (for Phase 2)
+#   5. That's it — the workflow starts automatically
+# ─────────────────────────────────────────────────────────────
+
+name: Job Scraper
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours
+  workflow_dispatch:          # also allow manual trigger from GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore database from previous run
+        uses: actions/cache@v4
+        with:
+          path: data/jobs.db
+          key: jobs-db-${{ github.run_number }}
+          restore-keys: jobs-db-
+
+      - name: Run scraper
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py --no-hn  # HN only updates monthly, run manually
+
+      - name: Upload Excel as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobs-${{ github.run_number }}
+          path: data/jobs_output.xlsx
+          retention-days: 30       # keeps last 30 days of Excel files
