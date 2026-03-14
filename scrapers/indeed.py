@@ -55,33 +55,9 @@ def _parse_feed(xml_bytes: bytes, query_label: str) -> list[dict]:
     return jobs
 
 
-def scrape(searches: list[dict] = None) -> list[dict]:
-    """
-    Scrape Indeed RSS for every search in INDEED_SEARCHES.
-    Returns a flat list of job dicts.
-    """
-    searches = searches or INDEED_SEARCHES
-    all_jobs = []
-
-    for search in searches:
-        q = search.get("q", "")
-        l = search.get("l", "")
-        params = {"q": q, "l": l, "sort": "date", "limit": 50, "fromage": 7}
-        url = f"https://www.indeed.com/rss?{urlencode(params)}"
-
-        print(f"  → Indeed: '{q}' in '{l}'")
-        resp = fetch(url)
-        if resp is None:
-            # If blocked (403), abort all remaining searches — they'll all fail too
-            print(
-                "  ✗ Indeed is blocking requests from this IP — skipping remaining searches")
-            break
-
-        jobs = _parse_feed(resp.content, f"{q}/{l}")
-        print(f"    ✓ {len(jobs)} jobs found")
-        all_jobs.extend(jobs)
-
-    return all_jobs
+def scrape(searches: list[dict] | None = None) -> list[dict]:
+    print("  ⚠ Indeed scraper disabled (blocks server IPs)")
+    return []
 
 
 if __name__ == "__main__":
