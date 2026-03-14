@@ -140,3 +140,25 @@ def get_stats() -> dict:
     ).fetchone()[0]
     conn.close()
     return stats
+
+
+def get_jobs_for_export(min_quality: int = 1) -> list:
+    """
+    Fetch jobs for Excel export.
+    - Excludes confirmed scams
+    - Excludes jobs below min quality score (if AI has run)
+    - Unverified jobs (quality_score IS NULL) always included
+    - Orders by quality score desc, then date desc
+    """
+    conn = get_connection()
+    rows = [dict(r) for r in conn.execute("""
+        SELECT * FROM jobs
+        WHERE (scam_flag IS NULL OR scam_flag = '')
+          AND (quality_score IS NULL OR quality_score >= ?)
+        ORDER BY
+            CASE WHEN quality_score IS NULL THEN 0 ELSE 1 END DESC,
+            quality_score DESC,
+            date_found DESC
+    """, (min_quality,)).fetchall()]
+    conn.close()
+    return rows
