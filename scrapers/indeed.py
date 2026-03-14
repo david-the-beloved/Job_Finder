@@ -25,16 +25,16 @@ def _parse_feed(xml_bytes: bytes, query_label: str) -> list[dict]:
             el = item.find(name)
             return el.text.strip() if el is not None and el.text else ""
 
-        title       = tag("title")
-        url         = tag("link")
+        title = tag("title")
+        url = tag("link")
         description = clean_text(tag("description"), max_len=800)
         date_posted = parse_date(tag("pubDate"))
 
         # Indeed puts "company - location" in the title sometimes
         company = ""
         if " - " in title:
-            parts   = title.rsplit(" - ", 1)
-            title   = parts[0].strip()
+            parts = title.rsplit(" - ", 1)
+            title = parts[0].strip()
             company = parts[1].strip() if len(parts) > 1 else ""
 
         if not url:
@@ -67,12 +67,15 @@ def scrape(searches: list[dict] = None) -> list[dict]:
         q = search.get("q", "")
         l = search.get("l", "")
         params = {"q": q, "l": l, "sort": "date", "limit": 50, "fromage": 7}
-        url    = f"https://www.indeed.com/rss?{urlencode(params)}"
+        url = f"https://www.indeed.com/rss?{urlencode(params)}"
 
         print(f"  → Indeed: '{q}' in '{l}'")
         resp = fetch(url)
         if resp is None:
-            continue
+            # If blocked (403), abort all remaining searches — they'll all fail too
+            print(
+                "  ✗ Indeed is blocking requests from this IP — skipping remaining searches")
+            break
 
         jobs = _parse_feed(resp.content, f"{q}/{l}")
         print(f"    ✓ {len(jobs)} jobs found")

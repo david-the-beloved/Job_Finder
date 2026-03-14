@@ -2,6 +2,7 @@
 # utils.py  —  Shared helpers used by all scrapers
 # ─────────────────────────────────────────────────────────────
 
+import requests
 import re
 from datetime import datetime
 from config import TARGET_KEYWORDS
@@ -107,7 +108,6 @@ def passes_keyword_filter(title: str) -> bool:
 
 # ── HTTP Helper ───────────────────────────────────────────────
 
-import requests
 
 HEADERS = {
     "User-Agent": (
@@ -119,14 +119,22 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
+
 def fetch(url: str, timeout: int = 15) -> requests.Response | None:
-    """GET request with retries and shared headers."""
+    """GET request with retries and shared headers. Never retries 4xx errors."""
     for attempt in range(3):
         try:
             resp = requests.get(url, headers=HEADERS, timeout=timeout)
             resp.raise_for_status()
             return resp
+        except requests.HTTPError as e:
+            # 4xx = client errors — retrying won't help, bail immediately
+            print(f"    ✗ {e}")
+            return None
         except requests.RequestException as e:
             if attempt == 2:
                 print(f"    ✗ Failed after 3 attempts: {url[:60]} — {e}")
+            else:
+                import time
+                time.sleep(2)
     return None

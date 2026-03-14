@@ -158,7 +158,23 @@ TARGET_KEYWORDS = [
     "intern", "siwes", "trainee", "graduate",
 ]
 
-# ── 6. OUTPUT ─────────────────────────────────────────────────
+# ── 6. REMOTIVE CATEGORIES ───────────────────────────────────
+REMOTIVE_CATEGORIES = [
+    "software-dev",       # Software Eng, Backend, Python, AI, Web Dev
+    "data",               # Data Science, Data Analytics
+    "design",             # UI/UX, Web Design, Graphic Design
+    "marketing",          # Digital Marketing
+    "sales",              # Sales & Marketing
+    "product",            # Project Management
+    "human-resources",    # HR Management
+    "customer-support",   # Customer Service / CX
+    "devops-sysadmin",    # Cybersecurity
+    "writing",            # Video Editing
+    "qa-testing",
+    "finance-legal",
+]
+
+# ── 7. OUTPUT ─────────────────────────────────────────────────
 DB_PATH = "data/jobs.db"
 EXCEL_PATH = "data/jobs_output.xlsx"
 GOOGLE_SERVICE_ACCOUNT_KEY = os.environ.get(

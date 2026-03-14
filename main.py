@@ -13,6 +13,7 @@
 import scrapers.hackernews as hn_scraper
 import scrapers.google_alerts as google_scraper
 import scrapers.remoteok as remoteok_scraper
+import scrapers.remotive as remotive_scraper
 import scrapers.indeed as indeed_scraper
 from config import HACKERNEWS_ENABLED, GEMINI_API_KEY, GOOGLE_SHEETS_ENABLED, GOOGLE_SHEET_ID
 from verify import verify_batch, get_quota_status
@@ -90,6 +91,9 @@ def main():
         total_new += n
 
         _, n = run_scraper("RemoteOK API",      remoteok_scraper.scrape)
+        total_new += n
+
+        _, n = run_scraper("Remotive API",       remotive_scraper.scrape)
         total_new += n
 
         _, n = run_scraper("Google Alerts RSS", google_scraper.scrape)
