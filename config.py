@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # config.py -- Your personalised job scraper config
 # Targeting: Nigeria + Remote | All your 20 role categories
@@ -72,6 +75,16 @@ GOOGLE_ALERT_FEEDS = [
 
     # Query: ("Microsoft Office" OR "Data Entry" OR "Administrative Assistant" OR "Virtual Assistant") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
     "https://www.google.com/alerts/feeds/01468691923227883564/13735372367469499006",
+
+    "https://www.google.com/alerts/feeds/01468691923227883564/9400277812245349921",
+
+    "https://www.google.com/alerts/feeds/01468691923227883564/6336132768190135015",
+
+    "https://www.google.com/alerts/feeds/01468691923227883564/8449500067692150583",
+
+    "https://www.google.com/alerts/feeds/01468691923227883564/6659162664020009043",
+
+    "https://www.google.com/alerts/feeds/01468691923227883564/18410914477435233343",
 ]
 
 # ── 2. INDEED SEARCHES ────────────────────────────────────────
@@ -184,7 +197,7 @@ GOOGLE_SHEETS_ENABLED = True
 
 # ── 7. GEMINI AI VERIFICATION ─────────────────────────────────
 # Get a free key at: aistudio.google.com/app/apikey
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # gemini-2.0-flash-lite = cheapest, fast, good enough for verification
 GEMINI_MODEL = "gemini-2.5-flash"

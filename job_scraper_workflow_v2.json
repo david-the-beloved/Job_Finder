@@ -1,0 +1,110 @@
+{
+	"name": "Job Scraper Daily",
+	"nodes": [
+		{
+			"parameters": {
+				"rule": {
+					"interval": [
+						{
+							"field": "hours",
+							"hoursInterval": 24,
+							"triggerAtHour": 8
+						}
+					]
+				}
+			},
+			"id": "node-trigger-001",
+			"name": "Daily 8am Trigger",
+			"type": "n8n-nodes-base.scheduleTrigger",
+			"typeVersion": 1.2,
+			"position": [200, 300]
+		},
+		{
+			"parameters": {
+				"jsCode": "const { execSync } = require('child_process');\ntry {\n  const output = execSync(\n    'python main.py --no-hn',\n    {\n      cwd: 'C:\\\\Users\\\\USER\\\\Documents\\\\Job Finder',\n      timeout: 600000,\n      encoding: 'utf8',\n      shell: true\n    }\n  );\n  return [{ json: { stdout: output, success: true } }];\n} catch(e) {\n  return [{ json: { stdout: e.stdout || '', stderr: e.stderr || '', success: false, error: e.message } }];\n}"
+			},
+			"id": "node-scraper-002",
+			"name": "Run Scraper",
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [440, 300]
+		},
+		{
+			"parameters": {
+				"jsCode": "const { execSync } = require('child_process');\ntry {\n  const output = execSync(\n    'python n8n_export.py',\n    {\n      cwd: 'C:\\\\Users\\\\USER\\\\Documents\\\\Job Finder',\n      timeout: 30000,\n      encoding: 'utf8',\n      shell: true\n    }\n  );\n  return [{ json: { stdout: output, success: true } }];\n} catch(e) {\n  return [{ json: { stdout: e.stdout || '', stderr: e.stderr || '', success: false, error: e.message } }];\n}"
+			},
+			"id": "node-export-003",
+			"name": "Export Jobs as JSON",
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [680, 300]
+		},
+		{
+			"parameters": {
+				"jsCode": "const stdout = $input.first().json.stdout;\nif (!stdout || stdout.trim() === '' || stdout.trim() === '[]') {\n  return [{ json: { message: 'No new jobs in last 24 hours' } }];\n}\ntry {\n  const jobs = JSON.parse(stdout.trim());\n  if (!Array.isArray(jobs) || jobs.length === 0) {\n    return [{ json: { message: 'No new jobs in last 24 hours' } }];\n  }\n  return jobs.map(job => ({ json: job }));\n} catch(e) {\n  throw new Error('JSON parse failed: ' + e.message + ' | stdout was: ' + stdout.substring(0, 300));\n}"
+			},
+			"id": "node-parse-004",
+			"name": "Parse Jobs",
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [920, 300]
+		},
+		{
+			"parameters": {
+				"operation": "append",
+				"documentId": {
+					"__rl": true,
+					"value": "YOUR_GOOGLE_SHEET_ID_HERE",
+					"mode": "id"
+				},
+				"sheetName": {
+					"__rl": true,
+					"value": "Job Postings",
+					"mode": "name"
+				},
+				"columns": {
+					"mappingMode": "autoMapInputData",
+					"value": {}
+				},
+				"options": {
+					"cellFormat": "USER_ENTERED"
+				}
+			},
+			"id": "node-sheets-005",
+			"name": "Write to Google Sheets",
+			"type": "n8n-nodes-base.googleSheets",
+			"typeVersion": 4.5,
+			"position": [1160, 300],
+			"credentials": {
+				"googleSheetsOAuth2Api": {
+					"id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+					"name": "Google Sheets account"
+				}
+			}
+		}
+	],
+	"connections": {
+		"Daily 8am Trigger": {
+			"main": [[{ "node": "Run Scraper", "type": "main", "index": 0 }]]
+		},
+		"Run Scraper": {
+			"main": [[{ "node": "Export Jobs as JSON", "type": "main", "index": 0 }]]
+		},
+		"Export Jobs as JSON": {
+			"main": [[{ "node": "Parse Jobs", "type": "main", "index": 0 }]]
+		},
+		"Parse Jobs": {
+			"main": [
+				[{ "node": "Write to Google Sheets", "type": "main", "index": 0 }]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1",
+		"saveManualExecutions": true,
+		"callerPolicy": "workflowsFromSameOwner",
+		"timezone": "Africa/Lagos"
+	},
+	"versionId": "job-scraper-v2-2024"
+}

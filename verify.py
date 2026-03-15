@@ -1,18 +1,5 @@
 #!/usr/bin/env python3
-# ──────────────────────────────────────────────────────────────
 # verify.py -- Gemini AI verification layer
-# ──────────────────────────────────────────────────────────────
-# For each new unverified job this module:
-#   1. Checks daily free quota (20 RPD) -- warns before going paid
-#   2. Sends job to Gemini 2.0 Flash-Lite for analysis
-#   3. Extracts: company, location, salary, remote, tech stack
-#   4. Scores job quality 1-10
-#   5. Flags scam jobs with a reason
-#   6. Writes results back to SQLite
-#
-# Run standalone:  python verify.py
-# Called by:       main.py automatically after scraping
-# ──────────────────────────────────────────────────────────────
 
 import json
 import os
@@ -26,8 +13,6 @@ from config import (
 )
 from database import get_connection, init_db
 
-
-# ── Gemini API ────────────────────────────────────────────────
 
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -66,67 +51,65 @@ Rules:
 - quality_reason: one sentence explaining the score"""
 
 
-def _call_gemini(prompt: str, retries: int = 3) -> dict | None:
-    """Make a single Gemini API call. Returns parsed JSON or None."""
+def _readable_date(dt: datetime = None) -> str:
+    """Return a human-readable date string e.g. March 14, 2026 at 08:00."""
+    dt = dt or datetime.now()
+    return dt.strftime("%B %d, %Y at %H:%M")
+
+
+def _call_gemini(prompt: str) -> dict | None:
+    """
+    Make a single Gemini API call.
+    Returns parsed JSON dict, or None if quota exceeded / any error.
+    Does NOT retry on 429 -- just returns None and lets the loop continue.
+    """
     url = GEMINI_URL.format(model=GEMINI_MODEL, key=GEMINI_API_KEY)
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.1,      # low temp = consistent structured output
+            "temperature": 0.1,
             "maxOutputTokens": 400,
         },
     }
 
-    for attempt in range(retries):
-        try:
-            resp = requests.post(url, json=payload, timeout=20)
+    try:
+        resp = requests.post(url, json=payload, timeout=20)
 
-            if resp.status_code == 429:
-                wait = 60 * (attempt + 1)
-                print(f"    Rate limited -- waiting {wait}s...")
-                time.sleep(wait)
-                continue
+        # Quota exceeded -- silently skip, do not retry, do not wait
+        if resp.status_code == 429:
+            return None
 
-            if resp.status_code == 403:
-                print("    ERROR: Invalid API key. Check GEMINI_API_KEY in config.py")
-                return None
+        # Bad API key
+        if resp.status_code == 403:
+            print("    ERROR: Invalid API key. Check GEMINI_API_KEY in config.py")
+            return None
 
-            resp.raise_for_status()
-            data = resp.json()
+        resp.raise_for_status()
+        data = resp.json()
 
-            # Extract text from Gemini response structure
-            text = (data.get("candidates", [{}])[0]
-                       .get("content", {})
-                       .get("parts", [{}])[0]
-                       .get("text", ""))
+        text = (data.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", ""))
 
-            # Strip markdown fences if model adds them
-            text = text.strip()
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            text = text.strip()
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        text = text.strip()
 
-            return json.loads(text)
+        return json.loads(text)
 
-        except json.JSONDecodeError as e:
-            print(f"    JSON parse error (attempt {attempt+1}): {e}")
-            if attempt == retries - 1:
-                return None
-        except Exception as e:
-            print(f"    API error (attempt {attempt+1}): {e}")
-            if attempt == retries - 1:
-                return None
-        time.sleep(2)
-
-    return None
+    except json.JSONDecodeError:
+        return None
+    except Exception:
+        return None
 
 
 # ── Quota Tracker ─────────────────────────────────────────────
 
 def _load_quota() -> dict:
-    """Load today's quota usage from disk."""
     today = str(date.today())
     if os.path.exists(GEMINI_QUOTA_FILE):
         try:
@@ -159,8 +142,7 @@ def get_quota_status() -> dict:
 
 # ── DB Helpers ────────────────────────────────────────────────
 
-def get_unverified_jobs(limit: int = None) -> list[dict]:
-    """Fetch jobs that haven't been through AI verification yet."""
+def get_unverified_jobs(limit: int = None) -> list:
     conn = get_connection()
     query = """
         SELECT id, title, company, location, description, url, source
@@ -176,7 +158,6 @@ def get_unverified_jobs(limit: int = None) -> list[dict]:
 
 
 def _update_job_ai_fields(job_id: str, ai: dict):
-    """Write Gemini results back to the jobs table."""
     conn = get_connection()
     tech_stack = ", ".join(ai.get("tech_stack", []))
     conn.execute("""
@@ -200,7 +181,7 @@ def _update_job_ai_fields(job_id: str, ai: dict):
         ai.get("location", ""), ai.get("location", ""),
         ai.get("salary", ""),   ai.get("salary", ""),
         ai.get("remote", ""),   ai.get("remote", ""),
-        datetime.now().strftime("%Y-%m-%d %H:%M"),
+        _readable_date(),       # human-readable last_checked
         job_id,
     ))
     conn.commit()
@@ -210,45 +191,38 @@ def _update_job_ai_fields(job_id: str, ai: dict):
 # ── Main Verification Runner ──────────────────────────────────
 
 def verify_batch(max_calls: int = None) -> dict:
-    """
-    Verify all unverified jobs up to the call limit.
-    Returns summary stats dict.
-    """
     if not GEMINI_API_KEY:
         print("  !! GEMINI_API_KEY not set -- skipping AI verification")
-        print("     Add your key to config.py or set env var GEMINI_API_KEY")
+        print("     Add your key to config.py")
         print("     Get a free key at: aistudio.google.com/app/apikey")
         return {"skipped": True}
 
-    max_calls  = max_calls or GEMINI_MAX_CALLS_PER_RUN
-    quota      = _load_quota()
-    status     = get_quota_status()
-
+    max_calls = max_calls or GEMINI_MAX_CALLS_PER_RUN
+    quota = _load_quota()
+    status = get_quota_status()
     unverified = get_unverified_jobs(limit=max_calls)
 
     if not unverified:
         print("  -- No unverified jobs to process")
-        return {"verified": 0, "scams": 0, "errors": 0}
+        return {"verified": 0, "scams": 0, "errors": 0, "skipped_quota": 0}
 
     print(f"  Jobs to verify   : {len(unverified)}")
     print(f"  Free calls left  : {status['free_remaining']}/{GEMINI_FREE_RPD}")
     if status["is_on_paid"]:
-        print(f"  Mode             : PAID (${status['cost_usd']:.4f} spent today)")
+        print(
+            f"  Mode             : PAID (${status['cost_usd']:.4f} spent today)")
     else:
         print(f"  Mode             : FREE tier")
     print()
 
     verified_count = 0
-    scam_count     = 0
-    error_count    = 0
+    scam_count = 0
+    error_count = 0
+    skipped_quota = 0
     calls_this_run = 0
 
     for i, job in enumerate(unverified):
-        if calls_this_run >= max_calls:
-            print(f"\n  Reached run cap of {max_calls} calls -- stopping")
-            break
 
-        # Build prompt
         prompt = f"""{SYSTEM_PROMPT}
 
 ---JOB POSTING---
@@ -260,63 +234,62 @@ URL:         {job.get('url', '')}
 Description: {job.get('description', '')[:600]}
 """
 
-        print(f"  [{i+1}/{len(unverified)}] {job['title'][:50]:<50}", end=" ")
+        print(f"  [{i+1}/{len(unverified)}] {job['title'][:50]:<50}",
+              end=" ", flush=True)
 
         ai_result = _call_gemini(prompt)
 
         if ai_result is None:
-            print("ERROR")
-            # Mark as verified=0 so we don't retry indefinitely
-            _update_job_ai_fields(job["id"], {
-                "verified": False,
-                "scam_flag": "AI verification failed",
-                "quality_score": 0,
-            })
-            error_count += 1
+            # Could be quota exceeded or any other error.
+            # Silently skip -- do not mark the job, retry next run.
+            skipped_quota += 1
+            print("SKIPPED")
         else:
             _update_job_ai_fields(job["id"], ai_result)
-            score    = ai_result.get("quality_score", 0)
-            is_scam  = bool(ai_result.get("scam_flag", ""))
-            verified = ai_result.get("verified", False)
+            score = ai_result.get("quality_score", 0)
+            is_scam = bool(ai_result.get("scam_flag", ""))
 
             if is_scam:
                 scam_count += 1
-                print(f"SCAM  (score:{score}) {ai_result.get('scam_flag','')[:40]}")
+                print(
+                    f"SCAM  (score:{score}) {ai_result.get('scam_flag', '')[:40]}")
             else:
-                print(f"OK    (score:{score}) {ai_result.get('quality_reason','')[:40]}")
+                print(
+                    f"OK    (score:{score}) {ai_result.get('quality_reason', '')[:40]}")
 
             verified_count += 1
+            calls_this_run += 1
 
-        # Update quota
-        calls_this_run     += 1
-        quota["calls"]     += 1
-        if quota["calls"] > GEMINI_FREE_RPD:
-            # Approximate cost: $0.10/M input + $0.40/M output tokens
-            # ~700 input + ~200 output per call
-            quota["paid_calls"]  = quota.get("paid_calls", 0) + 1
-            quota["cost_usd"]    = quota.get("cost_usd", 0.0) + 0.000098
-        _save_quota(quota)
+            # Update quota tracking
+            quota["calls"] += 1
+            if quota["calls"] > GEMINI_FREE_RPD:
+                quota["paid_calls"] = quota.get("paid_calls", 0) + 1
+                quota["cost_usd"] = quota.get("cost_usd", 0.0) + 0.000098
+            _save_quota(quota)
 
-        # Small delay to respect rate limits (30 RPM on free tier)
+        # Respectful delay between calls
         time.sleep(0.5)
 
     final_quota = _load_quota()
     print(f"""
-  ── Verification Summary ──────────────────
-  Processed  : {calls_this_run}
-  Verified OK: {verified_count}
-  Scams found: {scam_count}
-  Errors     : {error_count}
-  API calls today: {final_quota['calls']} (free limit: {GEMINI_FREE_RPD})
-  Est. cost today: ${final_quota.get('cost_usd', 0):.4f}
-  ──────────────────────────────────────────""")
+  Verification Summary
+  ────────────────────────────────────────
+  Processed    : {calls_this_run}
+  Verified OK  : {verified_count}
+  Scams found  : {scam_count}
+  Skipped      : {skipped_quota} (quota or error -- will retry next run)
+  API calls today : {final_quota['calls']} (free limit: {GEMINI_FREE_RPD})
+  Est. cost today : ${final_quota.get('cost_usd', 0):.4f}
+  Run completed   : {_readable_date()}
+  ────────────────────────────────────────""")
 
     return {
-        "verified":   verified_count,
-        "scams":      scam_count,
-        "errors":     error_count,
-        "api_calls":  calls_this_run,
-        "cost_today": final_quota.get("cost_usd", 0.0),
+        "verified":      verified_count,
+        "scams":         scam_count,
+        "errors":        error_count,
+        "skipped_quota": skipped_quota,
+        "api_calls":     calls_this_run,
+        "cost_today":    final_quota.get("cost_usd", 0.0),
     }
 
 
@@ -329,4 +302,5 @@ if __name__ == "__main__":
     print("=" * 50)
     result = verify_batch()
     if not result.get("skipped"):
-        print(f"\nDone. Verified {result['verified']} jobs, caught {result['scams']} scams.")
+        print(
+            f"\nDone. Verified {result['verified']} jobs, caught {result['scams']} scams.")

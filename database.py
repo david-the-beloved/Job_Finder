@@ -34,6 +34,7 @@ def init_db():
             url         TEXT,
             date_posted TEXT,
             date_found  TEXT NOT NULL,
+            synced_to_sheets INTEGER DEFAULT 0,
 
             -- AI fields (populated in Phase 2)
             verified    INTEGER DEFAULT NULL,  -- 1=true, 0=false
@@ -163,6 +164,34 @@ def get_jobs_for_export(min_quality: int = 1) -> list:
             CASE WHEN quality_score IS NULL THEN 0 ELSE 1 END DESC,
             quality_score DESC,
             date_found DESC
+    """, (min_quality,)).fetchall()]
+    conn.close()
+    return rows
+
+
+def mark_synced(job_ids: list):
+    """Mark jobs as synced to Google Sheets."""
+    conn = get_connection()
+    conn.executemany(
+        "UPDATE jobs SET synced_to_sheets = 1 WHERE id = ?",
+        [(jid,) for jid in job_ids]
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_unsynced_jobs(min_quality: int = 1) -> list:
+    """Fetch all jobs not yet synced to Google Sheets."""
+    conn = get_connection()
+    rows = [dict(r) for r in conn.execute("""
+        SELECT id, source, title, company, location, salary, remote,
+               tech_stack, quality_score, date_posted, date_found,
+               url, verified, scam_flag, description
+        FROM jobs
+        WHERE (synced_to_sheets IS NULL OR synced_to_sheets = 0)
+          AND (scam_flag IS NULL OR scam_flag = '')
+          AND (quality_score IS NULL OR quality_score >= ?)
+        ORDER BY date_found DESC
     """, (min_quality,)).fetchall()]
     conn.close()
     return rows
