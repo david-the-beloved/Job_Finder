@@ -200,7 +200,7 @@ GOOGLE_SHEETS_ENABLED = True
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # gemini-2.0-flash-lite = cheapest, fast, good enough for verification
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-2.5-flash-lite"
 
 # Free tier = 20 RPD. Script auto-tracks and warns when exceeded.
 GEMINI_FREE_RPD = 20

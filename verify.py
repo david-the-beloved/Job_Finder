@@ -57,11 +57,12 @@ def _readable_date(dt: datetime = None) -> str:
     return dt.strftime("%B %d, %Y at %H:%M")
 
 
-def _call_gemini(prompt: str) -> dict | None:
+def _call_gemini(prompt: str) -> tuple:
     """
-    Make a single Gemini API call.
-    Returns parsed JSON dict, or None if quota exceeded / any error.
-    Does NOT retry on 429 -- just returns None and lets the loop continue.
+    Returns (result, reason).
+    result is a dict on success, None on failure.
+    reason is one of: "ok", "quota", "key_error", "model_error",
+                      "parse_error", "timeout", or "error: ..."
     """
     url = GEMINI_URL.format(model=GEMINI_MODEL, key=GEMINI_API_KEY)
     payload = {
@@ -75,18 +76,19 @@ def _call_gemini(prompt: str) -> dict | None:
     try:
         resp = requests.post(url, json=payload, timeout=20)
 
-        # Quota exceeded -- silently skip, do not retry, do not wait
         if resp.status_code == 429:
-            return None
+            return None, "quota"
 
-        # Bad API key
         if resp.status_code == 403:
-            print("    ERROR: Invalid API key. Check GEMINI_API_KEY in config.py")
-            return None
+            return None, "key_error"
 
-        resp.raise_for_status()
+        if resp.status_code == 404:
+            return None, "model_error"
+
+        if not resp.ok:
+            return None, f"http_{resp.status_code}"
+
         data = resp.json()
-
         text = (data.get("candidates", [{}])[0]
                     .get("content", {})
                     .get("parts", [{}])[0]
@@ -99,12 +101,14 @@ def _call_gemini(prompt: str) -> dict | None:
                 text = text[4:]
         text = text.strip()
 
-        return json.loads(text)
+        return json.loads(text), "ok"
 
-    except json.JSONDecodeError:
-        return None
-    except Exception:
-        return None
+    except json.JSONDecodeError as e:
+        return None, f"parse_error: {str(e)[:50]}"
+    except requests.exceptions.Timeout:
+        return None, "timeout"
+    except Exception as e:
+        return None, f"error: {str(e)[:50]}"
 
 
 # ── Quota Tracker ─────────────────────────────────────────────
@@ -181,7 +185,7 @@ def _update_job_ai_fields(job_id: str, ai: dict):
         ai.get("location", ""), ai.get("location", ""),
         ai.get("salary", ""),   ai.get("salary", ""),
         ai.get("remote", ""),   ai.get("remote", ""),
-        _readable_date(),       # human-readable last_checked
+        _readable_date(),
         job_id,
     ))
     conn.commit()
@@ -223,7 +227,28 @@ def verify_batch(max_calls: int = None) -> dict:
 
     for i, job in enumerate(unverified):
 
-        prompt = f"""{SYSTEM_PROMPT}
+        print(f"  [{i+1}/{len(unverified)}] {job['title'][:50]:<50}",
+              end=" ", flush=True)
+
+        # Check free quota BEFORE calling -- stop cleanly if exhausted
+        # Note: if you have paid credits loaded, quota["calls"] will exceed
+        # GEMINI_FREE_RPD but calls will still succeed -- we only hard-stop
+        # on a 429 response from the API itself.
+        if quota["calls"] >= GEMINI_FREE_RPD:
+            print(
+                f"QUOTA EXHAUSTED -- {len(unverified) - i} jobs queued for tomorrow")
+            break
+
+        # Count the call BEFORE we make it so quota is always accurate
+        quota["calls"] += 1
+        if quota["calls"] > GEMINI_FREE_RPD:
+            quota["paid_calls"] = quota.get("paid_calls", 0) + 1
+            quota["cost_usd"] = quota.get("cost_usd", 0.0) + 0.000098
+        _save_quota(quota)
+        calls_this_run += 1
+
+        # Make the API call -- unpack both result AND reason
+        ai_result, reason = _call_gemini(prompt=f"""{SYSTEM_PROMPT}
 
 ---JOB POSTING---
 Title:       {job.get('title', '')}
@@ -232,18 +257,27 @@ Location:    {job.get('location', '')}
 Source:      {job.get('source', '')}
 URL:         {job.get('url', '')}
 Description: {job.get('description', '')[:600]}
-"""
+""")
 
-        print(f"  [{i+1}/{len(unverified)}] {job['title'][:50]:<50}",
-              end=" ", flush=True)
+        # Handle each failure reason explicitly
+        if reason == "quota":
+            print(
+                f"QUOTA HIT -- {len(unverified) - i} jobs queued for tomorrow")
+            break
 
-        ai_result = _call_gemini(prompt)
+        if reason == "model_error":
+            print("ERROR: Wrong model name in config.py -- stopping")
+            print(f"       Current model: {GEMINI_MODEL}")
+            print("       Try: gemini-2.0-flash-lite or gemini-1.5-flash-latest")
+            break
+
+        if reason == "key_error":
+            print("ERROR: Invalid API key in config.py -- stopping")
+            break
 
         if ai_result is None:
-            # Could be quota exceeded or any other error.
-            # Silently skip -- do not mark the job, retry next run.
-            skipped_quota += 1
-            print("SKIPPED")
+            error_count += 1
+            print(f"SKIPPED ({reason})")
         else:
             _update_job_ai_fields(job["id"], ai_result)
             score = ai_result.get("quality_score", 0)
@@ -256,16 +290,7 @@ Description: {job.get('description', '')[:600]}
             else:
                 print(
                     f"OK    (score:{score}) {ai_result.get('quality_reason', '')[:40]}")
-
             verified_count += 1
-            calls_this_run += 1
-
-            # Update quota tracking
-            quota["calls"] += 1
-            if quota["calls"] > GEMINI_FREE_RPD:
-                quota["paid_calls"] = quota.get("paid_calls", 0) + 1
-                quota["cost_usd"] = quota.get("cost_usd", 0.0) + 0.000098
-            _save_quota(quota)
 
         # Respectful delay between calls
         time.sleep(0.5)
@@ -274,10 +299,10 @@ Description: {job.get('description', '')[:600]}
     print(f"""
   Verification Summary
   ────────────────────────────────────────
-  Processed    : {calls_this_run}
-  Verified OK  : {verified_count}
-  Scams found  : {scam_count}
-  Skipped      : {skipped_quota} (quota or error -- will retry next run)
+  Processed       : {calls_this_run}
+  Verified OK     : {verified_count}
+  Scams found     : {scam_count}
+  Errors/Skipped  : {error_count}
   API calls today : {final_quota['calls']} (free limit: {GEMINI_FREE_RPD})
   Est. cost today : ${final_quota.get('cost_usd', 0):.4f}
   Run completed   : {_readable_date()}

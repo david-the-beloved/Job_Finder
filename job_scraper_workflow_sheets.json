@@ -1,0 +1,320 @@
+{
+  "name": "Job Scraper - Multi Sheet Export",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "id": "node-trigger-001",
+      "name": "Daily 8:10am Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { execSync } = require('child_process');\ntry {\n  const output = execSync(\n    'python n8n_export.py',\n    {\n      cwd: 'C:\\\\Users\\\\USER\\\\Documents\\\\Job Finder',\n      timeout: 30000,\n      encoding: 'utf8',\n      shell: true,\n      env: {\n        PYTHONIOENCODING: 'utf-8',\n        PATH: 'C:\\\\Windows\\\\system32;C:\\\\Windows;C:\\\\Users\\\\USER\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313;C:\\\\Users\\\\USER\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\Scripts'\n      }\n    }\n  );\n  const stdout = output.trim();\n  if (!stdout || stdout === '[]') { return []; }\n  const jobs = JSON.parse(stdout);\n  if (!Array.isArray(jobs) || jobs.length === 0) { return []; }\n  return jobs.map(job => ({ json: job }));\n} catch(e) {\n  throw new Error(e.message);\n}"
+      },
+      "id": "node-export-002",
+      "name": "Export and Parse Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 400]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.Category }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "Tech & Engineering",
+              "output": 0
+            },
+            {
+              "value2": "Data & Analytics",
+              "output": 1
+            },
+            {
+              "value2": "Design & Creative",
+              "output": 2
+            },
+            {
+              "value2": "Cybersecurity",
+              "output": 3
+            },
+            {
+              "value2": "Marketing & Sales",
+              "output": 4
+            },
+            {
+              "value2": "Operations & HR",
+              "output": 5
+            }
+          ]
+        },
+        "fallbackOutput": 6
+      },
+      "id": "node-switch-003",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Tech & Engineering",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-tech",
+      "name": "Tech & Engineering",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 60],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Data & Analytics",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-data",
+      "name": "Data & Analytics",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 200],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Design & Creative",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-design",
+      "name": "Design & Creative",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 340],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Cybersecurity",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-cyber",
+      "name": "Cybersecurity",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 480],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Marketing & Sales",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-marketing",
+      "name": "Marketing & Sales",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 620],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Operations & HR",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-ops",
+      "name": "Operations & HR",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 760],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Other",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": { "cellFormat": "USER_ENTERED" }
+      },
+      "id": "node-sheets-other",
+      "name": "Other",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [960, 900],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 8:10am Trigger": {
+      "main": [
+        [{ "node": "Export and Parse Jobs", "type": "main", "index": 0 }]
+      ]
+    },
+    "Export and Parse Jobs": {
+      "main": [
+        [{ "node": "Route by Category", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [{ "node": "Tech & Engineering",  "type": "main", "index": 0 }],
+        [{ "node": "Data & Analytics",    "type": "main", "index": 0 }],
+        [{ "node": "Design & Creative",   "type": "main", "index": 0 }],
+        [{ "node": "Cybersecurity",       "type": "main", "index": 0 }],
+        [{ "node": "Marketing & Sales",   "type": "main", "index": 0 }],
+        [{ "node": "Operations & HR",     "type": "main", "index": 0 }],
+        [{ "node": "Other",               "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "Africa/Lagos"
+  }
+}

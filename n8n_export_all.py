@@ -1,6 +1,5 @@
 # n8n_export_all.py
-# Exports ALL jobs from DB regardless of date.
-# Use for one-time full sync or manual resets.
+# Exports ALL jobs from DB with Category field for full sync.
 
 from config import MIN_QUALITY_SCORE
 from database import get_connection, init_db
@@ -17,6 +16,51 @@ sys.path.insert(0, '.')
 
 with contextlib.redirect_stdout(io.StringIO()):
     init_db()
+
+CATEGORY_RULES = [
+    ("Cybersecurity", [
+        "cybersecurity", "cyber security", "information security",
+        "security analyst", "infosec", "penetration", "pentest",
+    ]),
+    ("Data & Analytics", [
+        "data scientist", "data science", "data analyst", "data analytics",
+        "machine learning", "ml engineer", "analytics engineer",
+    ]),
+    ("Design & Creative", [
+        "ui", "ux", "designer", "graphic", "web design", "video editor",
+        "motion graphic", "webflow", "wordpress", "visual designer",
+        "product designer",
+    ]),
+    ("Marketing & Sales", [
+        "digital marketing", "digital marketer", "seo", "growth marketer",
+        "affiliate", "sales", "business development", "lead generation",
+        "marketing manager", "marketing specialist",
+    ]),
+    ("Operations & HR", [
+        "project manager", "scrum master", "product manager",
+        "hr manager", "human resource", "talent acquisition", "recruiter",
+        "customer service", "customer support", "customer experience",
+        "virtual assistant", "data entry", "administrative",
+        "microsoft office", "office assistant",
+    ]),
+    ("Tech & Engineering", [
+        "software engineer", "software developer", "backend", "frontend",
+        "full stack", "fullstack", "web developer", "python developer",
+        "python engineer", "ai engineer", "ai automation", "automation engineer",
+        "llm", "rag", "langchain", "crewai", "devops", "cloud engineer",
+        "mobile developer", "ios", "android", "react", "node",
+    ]),
+]
+
+DEFAULT_CATEGORY = "Other"
+
+
+def categorise(title: str) -> str:
+    title_lower = title.lower()
+    for category, keywords in CATEGORY_RULES:
+        if any(kw in title_lower for kw in keywords):
+            return category
+    return DEFAULT_CATEGORY
 
 
 def _fmt_date(raw: str) -> str:
@@ -46,6 +90,7 @@ rows = conn.execute("""
     FROM jobs
     WHERE (scam_flag IS NULL OR scam_flag = '')
       AND (quality_score IS NULL OR quality_score >= ?)
+      AND (still_active IS NULL OR still_active = 1)
     ORDER BY quality_score DESC, date_found DESC
 """, (MIN_QUALITY_SCORE,)).fetchall()
 conn.close()
@@ -67,6 +112,7 @@ for r in rows:
         "URL":          r[11] or "",
         "Verified":     _fmt_verified(r[12]),
         "Description":  (r[14] or "")[:300],
+        "Category":     categorise(r[2] or ""),
     })
 
 print(json.dumps(jobs))
