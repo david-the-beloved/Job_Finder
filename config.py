@@ -188,8 +188,8 @@ REMOTIVE_CATEGORIES = [
 ]
 
 # ── 7. OUTPUT ─────────────────────────────────────────────────
-DB_PATH = "data/jobs.db"
-EXCEL_PATH = "data/jobs_output.xlsx"
+DB_PATH = "/data/jobs.db"
+EXCEL_PATH = "/data/jobs_output.xlsx"
 GOOGLE_SERVICE_ACCOUNT_KEY = os.environ.get(
     "GOOGLE_SA_KEY_PATH", "data/service_account.json")
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
