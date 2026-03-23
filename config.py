@@ -1,7 +1,9 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # config.py -- Your personalised job scraper config
 # Targeting: Nigeria + Remote | All your 20 role categories
