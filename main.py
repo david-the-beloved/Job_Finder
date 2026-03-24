@@ -15,6 +15,9 @@ import scrapers.google_alerts as google_scraper
 import scrapers.remoteok as remoteok_scraper
 import scrapers.remotive as remotive_scraper
 import scrapers.indeed as indeed_scraper
+import scrapers.weworkremotely as wwr_scraper
+import scrapers.workingnomads as workingnomads_scraper
+import scrapers.himalayas as himalayas_scraper
 from config import HACKERNEWS_ENABLED, GEMINI_API_KEY, GOOGLE_SHEETS_ENABLED, GOOGLE_SHEET_ID
 from verify import verify_batch, get_quota_status
 from utils import passes_keyword_filter
@@ -43,7 +46,7 @@ def run_scraper(name: str, scrape_fn, *args) -> tuple[list, int]:
     new_count = 0
     skipped = 0
     for job in jobs:
-        if not passes_keyword_filter(job.get("title", "")):
+        if not passes_keyword_filter(job.get("title", ""), job.get("location", "")):
             skipped += 1
             continue
         if insert_job(job):
@@ -94,6 +97,17 @@ def main():
         total_new += n
 
         _, n = run_scraper("Remotive API",       remotive_scraper.scrape)
+        total_new += n
+
+        _, n = run_scraper("WWR RSS",             wwr_scraper.scrape)
+        total_new += n
+
+        _, n = run_scraper("Himalayas API",       himalayas_scraper.scrape)
+        total_new += n
+
+        # Jobspresso removed per user request
+
+        _, n = run_scraper("Working Nomads API",  workingnomads_scraper.scrape)
         total_new += n
 
         _, n = run_scraper("Google Alerts RSS", google_scraper.scrape)

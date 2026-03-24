@@ -21,129 +21,96 @@ except ImportError:
 #
 # PASTE YOUR 20 RSS URLS HERE after creating the alerts:
 GOOGLE_ALERT_FEEDS = [
-    # -- Software & AI Engineering --
-    # Query: ("AI Automation" OR "Automation Engineer" OR "AI Agent" OR "CrewAI" OR "LangChain") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/4197818390532235490",
+    "https://www.google.com/alerts/feeds/01468691923227883564/1509825071666675437",
+    "https://www.google.com/alerts/feeds/01468691923227883564/2363373608580205622",
+    "https://www.google.com/alerts/feeds/01468691923227883564/13130031224338349526",
+    "https://www.google.com/alerts/feeds/01468691923227883564/9834271075784157347",
+    "https://www.google.com/alerts/feeds/01468691923227883564/10474363077640805220",
+    "https://www.google.com/alerts/feeds/01468691923227883564/10067902513436386819",
+    "https://www.google.com/alerts/feeds/01468691923227883564/6007191438581647513",
+    "https://www.google.com/alerts/feeds/01468691923227883564/18035095860822861221",
+    "https://www.google.com/alerts/feeds/01468691923227883564/14190269149194048047",
+    "https://www.google.com/alerts/feeds/01468691923227883564/11730920047306232995",
+]
 
-    # Query: ("AI Engineering" OR "AI Engineer" OR "LLM" OR "RAG") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/9225487027929768142",
+# ── Additional RSS feeds for new scrapers ─────────────────────
+WWR_FEEDS = [
+    "https://weworkremotely.com/categories/remote-back-end-programming-jobs.rss",
+    "https://weworkremotely.com/categories/remote-design-jobs.rss",
+    "https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss",
+    # Example: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+]
 
-    # Query: ("Backend Development" OR "Backend Developer" OR "Backend Engineer" OR "FastAPI" OR "PostgreSQL") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/641582736709731395",
+JOBSPRESSO_FEEDS = [
+    # Disabled — Jobspresso removed from pipeline per user request
+]
 
-    # Query: ("Python Programming" OR "Python Developer" OR "Python Engineer") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/9873014383824638038",
+WORKING_NOMADS_FEEDS = [
+    "https://www.workingnomads.co/api/exposed_jobs/"
 
-    # Query: ("Software Engineering" OR "Software Engineer" OR "Software Developer") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/7239954670997390510",
+]
 
-    # -- Web & Design --
-    # Query: ("Website Development" OR "Web Developer" OR "Frontend Developer" OR "React") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/16912204080919469312",
+# Himalayas API queries used by the Himalayas scraper
+HIMALAYAS_QUERIES = [
+    "web designer",
+    "web developer",
+    "data scientist",
+    "ux designer",
+    "virtual assistant",
+    "cybersecurity",
+    "digital marketing",
+    "caregiver",
+    "intern",
+]
 
-    # Query: ("Website Design" OR "Web Designer" OR "Webflow" OR "WordPress") AND ("job" OR "hiring" OR "internship") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/9450784462869828834",
+# Suggested Google Alerts queries (paste each into google.com/alerts and create RSS feeds)
+# These six queries cover the target categories and restrict to Nigeria or Remote.
+GOOGLE_ALERT_QUERIES = [
+    # Web Design
+    '("web designer" OR "web design" OR webflow OR figma) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    # Web Development
+    '("web developer" OR frontend OR backend OR react OR vue) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    # Data Science & Analytics
+    '("data scientist" OR "data analyst" OR "data analytics" OR "machine learning") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    # Graphics & UI/UX Design
+    '("ux designer" OR "ui designer" OR "graphic designer" OR "product designer") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    # Virtual Assistant
+    '("virtual assistant" OR "administrative assistant" OR "data entry") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    # Cybersecurity
+    '("cybersecurity" OR "security analyst" OR infosec OR pentest) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+]
 
-    # Query: ("UI/UX Design" OR "UX Designer" OR "UI Designer" OR "Product Designer") AND ("job" OR "hiring" OR "internship") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/1860411076963337181",
+# OPTIONAL: Sponsorship-focused Google Alerts for UK/Canada (include "visa sponsorship" in query)
+# GOOGLE_ALERT_QUERIES_SPONSORSHIP = [
+#     '("web developer" OR frontend OR react) ("visa sponsorship" OR "sponsorship" OR "relocation") (United Kingdom OR UK)',
+#     '("data scientist" OR "machine learning") ("visa sponsorship" OR "sponsorship" OR "relocation") (Canada)',
+# ]
 
-    # Query: ("Graphic Design" OR "Graphic Designer" OR "Visual Designer") AND ("job" OR "hiring" OR "internship") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/17157149744000026465",
-
-    # Query: ("Video Editing" OR "Video Editor" OR "Motion Graphics") AND ("job" OR "hiring" OR "internship") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/14604670319903036885",
-
-    # -- Data & Security --
-    # Query: ("Data Science" OR "Data Scientist" OR "Machine Learning" OR "Data Analytics" OR "Data Analyst") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/85202478982112756",
-
-    # Query: ("Cybersecurity" OR "Cyber Security" OR "Information Security" OR "Security Analyst") AND ("job" OR "hiring" OR "internship" OR "SIWES") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/618360882686642336",
-
-    # -- Business, Marketing & Operations --
-    # Query: ("Sales" OR "Marketing" OR "Business Development" OR "Lead Generation") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/11942330650386542042",
-
-    # Query: ("Digital Marketing" OR "Digital Marketer" OR "SEO" OR "Growth Marketer" OR "Affiliate Marketing") AND ("job" OR "hiring" OR "internship") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/6780290350157594727",
-
-    # Query: ("Human Resource Management" OR "HR Manager" OR "Human Resources" OR "Talent Acquisition") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/15658136954935503802",
-
-    # Query: ("Project Management" OR "Project Manager" OR "Scrum Master" OR "Product Manager") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/16209577461149503278",
-
-    # Query: ("Customer Service" OR "Customer Experience" OR "Customer Support" OR "CX") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/3789525544071779490",
-
-    # Query: ("Microsoft Office" OR "Data Entry" OR "Administrative Assistant" OR "Virtual Assistant") AND ("job" OR "hiring" OR "vacancy") AND ("Nigeria" OR "remote" OR "work from home" OR "WFH")
-    "https://www.google.com/alerts/feeds/01468691923227883564/13735372367469499006",
-
-    "https://www.google.com/alerts/feeds/01468691923227883564/9400277812245349921",
-
-    "https://www.google.com/alerts/feeds/01468691923227883564/6336132768190135015",
-
-    "https://www.google.com/alerts/feeds/01468691923227883564/8449500067692150583",
-
-    "https://www.google.com/alerts/feeds/01468691923227883564/6659162664020009043",
-
-    "https://www.google.com/alerts/feeds/01468691923227883564/18410914477435233343",
+# LinkedIn-specific alert queries. Google Alerts can index LinkedIn public job pages;
+# use the site: operator to bias results toward LinkedIn postings (paste these into Alerts).
+GOOGLE_ALERT_QUERIES_LINKEDIN = [
+    '(site:linkedin.com/jobs) ("web designer" OR "web design" OR webflow OR figma) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    '(site:linkedin.com/jobs) ("web developer" OR frontend OR backend OR react OR vue) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    '(site:linkedin.com/jobs) ("data scientist" OR "data analyst" OR "data analytics" OR "machine learning") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    '(site:linkedin.com/jobs) ("ux designer" OR "ui designer" OR "graphic designer" OR "product designer") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    '(site:linkedin.com/jobs) ("virtual assistant" OR "administrative assistant" OR "data entry") (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
+    '(site:linkedin.com/jobs) ("cybersecurity" OR "security analyst" OR infosec OR pentest) (job OR hiring OR vacancy) (Nigeria OR Lagos OR Abuja OR "work from home" OR remote)',
 ]
 
 # ── 2. INDEED SEARCHES ────────────────────────────────────────
-# Covers all 20 of your categories.
-# "remote" catches global remote roles open to Nigeria.
-# "Lagos" catches Nigeria-specific postings.
-INDEED_SEARCHES = [
-    # Software & AI Engineering
-    {"q": "AI automation engineer",        "l": "remote"},
-    {"q": "AI agent developer LangChain",  "l": "remote"},
-    {"q": "AI engineer LLM",               "l": "remote"},
-    {"q": "backend developer FastAPI",     "l": "remote"},
-    {"q": "backend engineer Python",       "l": "remote"},
-    {"q": "Python developer",              "l": "remote"},
-    {"q": "software engineer",             "l": "remote"},
-    {"q": "software developer",            "l": "Lagos"},
+# Indeed searches removed — we rely on Google Alerts / APIs and
+# post-scrape filtering to avoid scraping Indeed directly (Indeed blocks scraping).
 
-    # Web & Design
-    {"q": "frontend developer React",      "l": "remote"},
-    {"q": "web developer",                 "l": "remote"},
-    {"q": "web designer Webflow",          "l": "remote"},
-    {"q": "UI UX designer",                "l": "remote"},
-    {"q": "product designer",              "l": "remote"},
-    {"q": "graphic designer",              "l": "remote"},
-    {"q": "graphic designer",              "l": "Lagos"},
-    {"q": "video editor motion graphics",  "l": "remote"},
-
-    # Data & Security
-    {"q": "data scientist machine learning", "l": "remote"},
-    {"q": "data analyst",                  "l": "remote"},
-    {"q": "data analyst",                  "l": "Lagos"},
-    {"q": "cybersecurity analyst",         "l": "remote"},
-    {"q": "information security engineer", "l": "remote"},
-
-    # Business, Marketing & Operations
-    {"q": "digital marketing SEO",         "l": "remote"},
-    {"q": "digital marketer",              "l": "Lagos"},
-    {"q": "sales marketing Nigeria",       "l": "remote"},
-    {"q": "business development",          "l": "Lagos"},
-    {"q": "HR manager talent acquisition", "l": "remote"},
-    {"q": "human resources",               "l": "Lagos"},
-    {"q": "project manager",               "l": "remote"},
-    {"q": "scrum master product manager",  "l": "remote"},
-    {"q": "customer service support",      "l": "remote"},
-    {"q": "customer experience",           "l": "Lagos"},
-    {"q": "virtual assistant",             "l": "remote"},
-    {"q": "data entry administrative",     "l": "remote"},
-]
 
 # ── 3. REMOTEOK TAGS ──────────────────────────────────────────
 # RemoteOK tags that map to your target roles
 REMOTEOK_TAGS = [
-    "engineer", "developer", "python", "react", "backend",
-    "frontend", "ai", "machine-learning", "data", "design",
-    "ux", "marketing", "manager", "devops", "security",
-    "customer-support", "video", "hr",
+    # Narrow tags to the six target categories
+    "developer", "web", "frontend", "react", "vue", "backend",
+    "design", "ux", "ui", "graphic", "product",
+    "data", "machine-learning", "security", "virtual-assistant",
+    # Add marketing and healthcare-related tags for other sources
+    "marketing", "seo", "social-media", "healthcare", "caregiver",
 ]
 
 # ── 4. HACKER NEWS ────────────────────────────────────────────
@@ -153,41 +120,49 @@ HACKERNEWS_ENABLED = True
 # A job title must contain at least ONE of these words to be saved.
 # This prevents irrelevant results from wasting AI credits.
 TARGET_KEYWORDS = [
-    # Tech roles
-    "engineer", "developer", "programmer", "architect",
-    "python", "backend", "frontend", "fullstack", "full stack",
-    "ai", "automation", "machine learning", "llm", "rag",
-    # Data
-    "data", "analyst", "scientist", "analytics",
-    # Design & Creative
-    "designer", "design", "ux", "ui", "graphic", "video", "editor",
-    "webflow", "wordpress", "web",
-    # Security
-    "security", "cybersecurity", "infosec",
-    # Business & Ops
-    "marketing", "seo", "digital", "sales", "business development",
-    "hr", "human resource", "recruiter", "talent",
-    "project manager", "product manager", "scrum",
-    "customer service", "customer support", "customer experience",
-    "virtual assistant", "data entry", "administrative",
-    # SIWES / internship terms common in Nigeria
-    "intern", "siwes", "trainee", "graduate",
+    # Focused on the six target categories (see README / plan)
+    # Web Design
+    "web designer", "webflow", "figma", "ui designer", "website design",
+    # Web Development
+    "web developer", "frontend", "backend", "fullstack", "full stack",
+    "react", "vue", "angular", "node", "javascript", "php",
+    # Data Science & Analytics
+    "data scientist", "data analyst", "data analytics", "analytics",
+    "machine learning", "ml", "ml engineer",
+    # Graphics & UI/UX Design
+    "ux designer", "ui ux", "ui/ux", "graphic designer", "visual designer",
+    "product designer", "motion graphic", "visual design",
+    # Virtual Assistant
+    "virtual assistant", "administrative assistant", "data entry",
+    # Cybersecurity
+    "cybersecurity", "security analyst", "information security", "infosec",
+    "penetration", "pentest", "security engineer",
+    # Internship / trainee terms (include internships within the target categories)
+    "intern", "internship", "siwes", "trainee", "graduate",
+    # Broader terms and common tech/shop keywords to increase recall
+    "engineer", "software engineer", "developer", "software", "dev",
+    "junior", "mid", "senior", "entry-level", "entry level", "associate",
+    "python", "django", "flask", "nodejs", "node", "typescript", "typescript",
+    "java", "c#", "c++", "php", "ruby", "rails", "go", "golang",
+    "sql", "postgres", "mysql", "mongodb", "firebase", "aws", "azure", "gcp",
+    "docker", "kubernetes", "devops", "site reliability", "sre",
+    "css", "html", "scss", "sass", "figma", "sketch", "adobe", "photoshop", "illustrator",
+    "seo", "sem", "content", "social media", "ppc", "email marketing", "growth",
+    "excel", "powerbi", "tableau", "r", "spark", "hadoop", "etl",
+    "support", "customer support", "technical support", "virtual assistant", "va",
+    "security", "infosec", "pentest", "penetration", "sre", "soc", "cloud security",
 ]
 
 # ── 6. REMOTIVE CATEGORIES ───────────────────────────────────
 REMOTIVE_CATEGORIES = [
-    "software-dev",       # Software Eng, Backend, Python, AI, Web Dev
-    "data",               # Data Science, Data Analytics
-    "design",             # UI/UX, Web Design, Graphic Design
-    "marketing",          # Digital Marketing
-    "sales",              # Sales & Marketing
-    "product",            # Project Management
-    "human-resources",    # HR Management
-    "customer-support",   # Customer Service / CX
-    "devops-sysadmin",    # Cybersecurity
-    "writing",            # Video Editing
-    "qa-testing",
-    "finance-legal",
+    # Keep only categories relevant to the six targets
+    "software-dev",
+    "data",
+    "design",
+    "customer-support",  # used for virtual assistant roles
+    "devops-sysadmin",   # maps to security / sysadmin
+    "marketing",
+    # Note: Remotive may not have a dedicated healthcare category; Google Alerts will cover caregiver roles
 ]
 
 # ── 7. OUTPUT ─────────────────────────────────────────────────
@@ -217,3 +192,18 @@ GEMINI_QUOTA_FILE = "data/gemini_quota.json"
 # Jobs below this score are hidden from Excel but kept in DB.
 # Set to 1 to see everything including low-quality postings.
 MIN_QUALITY_SCORE = 4
+
+# ── Location filtering: allow only jobs that match these location terms
+# Matches are case-insensitive substrings of the extracted location field.
+ALLOWED_LOCATIONS = [
+    "Nigeria",
+    # common Nigerian cities / states (keeps local roles)
+    "Lagos", "Abuja", "Port Harcourt", "Kano", "Ibadan", "Enugu",
+    "Benin", "Jos", "Kaduna", "Warri", "Owerri", "Uyo", "Zaria",
+    "Ilorin", "Abeokuta",
+    # Remote
+    "Remote", "Work from Home", "WFH", "Work-from-Home", "Telecommute",
+]
+
+# Toggle enforcement. Set False to disable location filtering.
+ENFORCE_LOCATION_FILTER = True

@@ -5,7 +5,7 @@
 import requests
 import re
 from datetime import datetime
-from config import TARGET_KEYWORDS
+from config import TARGET_KEYWORDS, ALLOWED_LOCATIONS, ENFORCE_LOCATION_FILTER
 
 
 # ── Text Cleaners ─────────────────────────────────────────────
@@ -44,7 +44,7 @@ def extract_salary(text: str) -> str:
 def extract_location(text: str) -> str:
     """Extract location hint from text."""
     # Check remote first
-    if re.search(r"\bremote\b", text, re.IGNORECASE):
+    if re.search(r"\b(remote|work from home|work-from-home|wfh|telecommute)\b", text, re.IGNORECASE):
         # Check if it's hybrid
         if re.search(r"hybrid", text, re.IGNORECASE):
             return "Hybrid / Remote"
@@ -55,7 +55,11 @@ def extract_location(text: str) -> str:
         "New York", "San Francisco", "Seattle", "Austin", "Boston",
         "Chicago", "Los Angeles", "Denver", "Atlanta", "Miami",
         "Toronto", "London", "Berlin", "Amsterdam", "Singapore",
-        "Lagos", "Nairobi", "Dubai", "Sydney", "Bangalore",
+        # Nigerian cities (ensure local matches)
+        "Lagos", "Abuja", "Port Harcourt", "Kano", "Ibadan", "Enugu",
+        "Benin", "Jos", "Kaduna", "Warri", "Owerri", "Uyo", "Zaria",
+        "Ilorin", "Abeokuta",
+        "Nairobi", "Dubai", "Sydney", "Bangalore",
     ]
     for city in cities:
         if city.lower() in text.lower():
@@ -94,16 +98,48 @@ def parse_date(raw: str) -> str:
 
 # ── Keyword Filter ────────────────────────────────────────────
 
-def passes_keyword_filter(title: str) -> bool:
+def passes_keyword_filter(title: str, location: str = "") -> bool:
     """
     Return True if the job title contains at least one target keyword.
-    Skips the AI call for irrelevant postings — saves API credits.
+    Additionally enforce location constraints when enabled.
     If TARGET_KEYWORDS is empty, everything passes.
     """
     if not TARGET_KEYWORDS:
         return True
-    title_lower = title.lower()
-    return any(kw.lower() in title_lower for kw in TARGET_KEYWORDS)
+    title_lower = (title or "").lower()
+    title_match = any(kw.lower() in title_lower for kw in TARGET_KEYWORDS)
+
+    # If location enforcement is disabled, title match is sufficient
+    if not ENFORCE_LOCATION_FILTER:
+        return title_match
+
+    # If no location info provided, be conservative and treat as non-matching
+    if not location:
+        return False if title_match else False
+
+    # Check if any allowed location term appears in the location text
+    loc_lower = location.lower()
+    location_match = any(
+        term.lower() in loc_lower for term in ALLOWED_LOCATIONS)
+
+    # Flexible policy:
+    # - If the title matches and location is blank, accept (don’t over-filter noisy sources)
+    # - If the title matches and location contains any allowed term (Nigeria or Remote variants), accept
+    # - Otherwise reject
+    if title_match:
+        if not location:
+            return True
+        loc_lower = location.lower()
+        location_match = any(
+            term.lower() in loc_lower for term in ALLOWED_LOCATIONS)
+        if location_match:
+            return True
+        # also accept common remote wording even if extract_location didn't return a canonical term
+        if re.search(r"\b(remote|work from home|wfh|telecommute)\b", loc_lower):
+            return True
+        return False
+
+    return False
 
 
 # ── HTTP Helper ───────────────────────────────────────────────

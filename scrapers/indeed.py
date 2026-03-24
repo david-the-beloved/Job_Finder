@@ -9,7 +9,7 @@
 import xml.etree.ElementTree as ET
 from urllib.parse import urlencode
 from utils import fetch, clean_text, extract_salary, extract_location, is_remote, parse_date
-from config import INDEED_SEARCHES
+# Indeed searches removed from config; scraper intentionally returns no results.
 
 
 def _parse_feed(xml_bytes: bytes, query_label: str) -> list[dict]:
