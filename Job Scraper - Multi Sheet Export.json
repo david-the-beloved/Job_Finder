@@ -1597,7 +1597,7 @@
         "method": "POST",
         "jsonParameters": true,
         "options": {},
-        "bodyParametersJson": "={{ {\"ids\":[ $json.ID ] } }}"
+        "bodyParametersJson": "={{ $input.all().map(item => item.json.ID) }}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
