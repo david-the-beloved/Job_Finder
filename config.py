@@ -140,10 +140,9 @@ TARGET_KEYWORDS = [
     # Internship / trainee terms (include internships within the target categories)
     "intern", "internship", "siwes", "trainee", "graduate",
     # Broader terms and common tech/shop keywords to increase recall
-    "engineer", "software engineer", "developer", "software", "dev",
-    "junior", "mid", "senior", "entry-level", "entry level", "associate",
-    "python", "django", "flask", "nodejs", "node", "typescript", "typescript",
-    "java", "c#", "c++", "php", "ruby", "rails", "go", "golang",
+    "engineer", "developer", "software", "dev",
+    "junior", "entry-level", "entry level", "associate",
+    "python", "django", "flask", "nodejs", "node", "typescript",
     "sql", "postgres", "mysql", "mongodb", "firebase", "aws", "azure", "gcp",
     "docker", "kubernetes", "devops", "site reliability", "sre",
     "css", "html", "scss", "sass", "figma", "sketch", "adobe", "photoshop", "illustrator",
@@ -160,7 +159,6 @@ REMOTIVE_CATEGORIES = [
     "data",
     "design",
     "customer-support",  # used for virtual assistant roles
-    "devops-sysadmin",   # maps to security / sysadmin
     "marketing",
     # Note: Remotive may not have a dedicated healthcare category; Google Alerts will cover caregiver roles
 ]
