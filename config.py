@@ -117,40 +117,45 @@ HACKERNEWS_ENABLED = True
 
 # ── 5. KEYWORD FILTER ─────────────────────────────────────────
 # A job title must contain at least ONE of these words to be saved.
-# This prevents irrelevant results from wasting AI credits.
 TARGET_KEYWORDS = [
-    # Focused on the six target categories (see README / plan)
-    # Web Design
-    "web designer", "webflow", "figma", "ui designer", "website design",
-    # Web Development
-    "web developer", "frontend", "backend", "fullstack", "full stack",
-    "react", "vue", "angular", "node", "javascript", "php",
-    # Data Science & Analytics
-    "data scientist", "data analyst", "data analytics", "analytics",
-    "machine learning", "ml", "ml engineer",
-    # Graphics & UI/UX Design
-    "ux designer", "ui ux", "ui/ux", "graphic designer", "visual designer",
-    "product designer", "motion graphic", "visual design",
-    # Virtual Assistant
-    "virtual assistant", "administrative assistant", "data entry",
-    # Cybersecurity
-    "cybersecurity", "security analyst", "information security", "infosec",
-    "penetration", "pentest", "security engineer",
-    # Internship / trainee terms (include internships within the target categories)
-    "intern", "internship", "siwes", "trainee", "graduate",
-    # Broader terms and common tech/shop keywords to increase recall
-    "engineer", "developer", "software", "dev",
-    "junior", "entry-level", "entry level", "associate",
-    "python", "django", "flask", "nodejs", "node", "typescript",
-    "sql", "postgres", "mysql", "mongodb", "firebase", "aws", "azure", "gcp",
-    "docker", "kubernetes", "devops", "site reliability", "sre",
-    "css", "html", "scss", "sass", "figma", "sketch", "adobe", "photoshop", "illustrator",
-    "seo", "sem", "content", "social media", "ppc", "email marketing", "growth",
-    "excel", "powerbi", "tableau", "r", "spark", "hadoop", "etl",
-    "support", "customer support", "technical support", "virtual assistant", "va",
-    "security", "infosec", "pentest", "penetration", "sre", "soc", "cloud security",
-]
+    # --- Web & Software Development ---
+    "web developer", "frontend", "front-end", "backend", "back-end", "fullstack", "full-stack",
+    "software engineer", "software developer", "devops", "systems engineer", "web engineer",
+    "react", "vue", "angular", "node", "javascript", "typescript", "nextjs", "nuxt",
+    "php", "laravel", "python", "django", "flask", "ruby", "rails", "golang", "java", "spring",
+    "c#", ".net", "asp.net", "wordpress", "elementor", "shopify", "magento",
 
+    # --- Data & AI ---
+    "data scientist", "data analyst", "data analytics", "business intelligence", "bi analyst",
+    "machine learning", "ml engineer", "ai engineer", "deep learning", "nlp",
+    "tableau", "powerbi", "power bi", "sql", "postgresql", "mysql", "mongodb", "etl",
+
+    # --- Design & Creative ---
+    "ux designer", "ui designer", "ui/ux", "ux/ui", "product designer", "web designer",
+    "graphic designer", "visual designer", "motion designer", "brand designer",
+    "figma", "adobe", "photoshop", "illustrator", "canva", "creative lead",
+
+    # --- Cybersecurity & Infrastructure ---
+    "cybersecurity", "cyber security", "information security", "infosec", "soc analyst",
+    "security engineer", "penetration tester", "pentest", "ethical hacker", "cloud security",
+    "network engineer", "site reliability", "sre", "cloud engineer", "aws", "azure", "gcp",
+
+    # --- Digital Marketing & Content ---
+    "digital marketing", "digital marketer", "seo", "sem", "content creator", "content manager",
+    "social media", "media buyer", "ppc", "google ads", "meta ads", "email marketing",
+    "growth lead", "performance marketing",
+
+    # --- Virtual Assistant & Admin ---
+    "virtual assistant", "administrative assistant", "data entry", "va", "executive assistant",
+    "personal assistant", "office manager", "operations assistant",
+
+    # --- Healthcare/Caregiving ---
+    "caregiver", "care assistant", "healthcare assistant", "hca", "support worker",
+    "home care", "nursing assistant",
+
+    # --- Early Career & General ---
+    "intern", "internship", "siwes", "trainee", "graduate", "junior", "entry-level", "associate"
+]
 # ── 6. REMOTIVE CATEGORIES ───────────────────────────────────
 REMOTIVE_CATEGORIES = [
     # Keep only categories relevant to the six targets
