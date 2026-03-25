@@ -1,2 +1,1 @@
-web: python3 api.py
-worker: python3 main.py --no-hn
+worker: python3 main.py --no-hn --no-verify
