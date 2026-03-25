@@ -1,9 +1,8 @@
-from database import get_all_jobs
+from collections import Counter
 from api import _categorise
+from database import get_all_jobs
 import os
 import sys
-from collections import Counter
-
 # Ensure repo root is on sys.path
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
