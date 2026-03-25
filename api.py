@@ -155,7 +155,7 @@ def health():
 def execute_scraper_script():
     """The actual function that runs in the background"""
     print("Manual scraper run triggered via API...")
-    subprocess.run(["python", "main.py", "--no-hn", "--no-verify"])
+    subprocess.run(["python", "main.py", "--no-verify"])
     print("Manual scraper run complete.")
 
 
