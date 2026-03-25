@@ -208,8 +208,8 @@ ENFORCE_LOCATION_FILTER = True
 # ── 8. CATEGORY RULES ─────────────────────────────────────────
 CATEGORY_RULES = [
     ("Web Design", [
-        "web designer", "webflow", "figma", "ui designer", "website design",
-        "visual designer", "graphic design", "brand designer", "brand design",
+        "web designer", "web design", "website design", "webflow", "landing page",
+        "squarespace", "wix", "framer",
     ]),
     ("Web Development", [
         "web developer", "frontend", "backend", "fullstack", "full stack",
@@ -223,12 +223,14 @@ CATEGORY_RULES = [
         "data", "tableau", "powerbi", "spark", "hadoop", "python", "sql", "etl"
     ]),
     ("Graphics & UI/UX", [
-        "ux designer", "ui ux", "ui/ux", "graphic designer", "motion graphic",
-        "product designer", "visual design", "brand designer", "photoshop", "illustrator", "adobe",
-        "sketch",
+        "ux designer", "ui designer", "ui ux", "ui/ux", "ux/ui", "graphic designer",
+        "graphic design", "product designer", "visual designer", "visual design",
+        "brand designer", "brand design", "motion graphic", "photoshop", "illustrator",
+        "adobe", "sketch", "figma", "digital designer", "creative designer"
     ]),
     ("Virtual Assistant", [
         "virtual assistant", "administrative assistant", "data entry", "va",
+        "admin", "executive assistant", "personal assistant"
     ]),
     ("Cybersecurity", [
         "cybersecurity", "security analyst", "information security", "infosec",
@@ -240,7 +242,8 @@ CATEGORY_RULES = [
     ]),
     ("Digital Marketing", [
         "digital marketing", "digital marketer", "seo", "social media", "content marketing",
-        "growth marketer", "social-media", "email marketing",
+        "growth marketer", "social-media", "email marketing", "marketing", "ads",
+        "advertising", "campaigns", "ppc", "performance marketing", "product marketing", "media buyer"
     ]),
     ("Caregiver/Health Care Assistant", [
         "caregiver", "care assistant", "healthcare assistant", "home care", "care home",
