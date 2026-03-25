@@ -44,7 +44,7 @@ def get_unsynced_jobs_api(limit: int = 500, min_quality: int = 1):
     jobs = []
     for r in rows:
         # Check title, tech stack, and description for much better accuracy
-        category = _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}")
+        category = _categorise(f"{r[2] or ''} {r[7] or ''}", r[14] or "")
 
         jobs.append({
             "ID":          r[0] or "",
@@ -83,12 +83,15 @@ def mark_jobs_synced(body: list[str]):
     return JSONResponse(content={"updated": len(body)})
 
 
-def _categorise(text_to_check: str) -> str:
+def _categorise(title_and_stack: str, description: str) -> str:
     """
-    Categorise by checking keywords against a combined text string.
-    Safely handles special characters like C++ or UI/UX.
+    Categorise by scoring keywords. Title matches are worth 5 points,
+    Description matches are worth 1 point. Highest score wins.
     """
-    t = (text_to_check or "").lower()
+    title = (title_and_stack or "").lower()
+    desc = (description or "").lower()
+
+    scores = {category: 0 for category, _ in CATEGORY_RULES}
 
     for category, keywords in CATEGORY_RULES:
         for k in keywords:
@@ -96,20 +99,28 @@ def _categorise(text_to_check: str) -> str:
             if not k_norm:
                 continue
 
-            # If keyword contains special characters at the edges, drop the \b constraint for that edge
             pattern = re.escape(k_norm)
-
-            # Only apply word boundary if the keyword starts with an alphanumeric character
             if k_norm[0].isalnum():
                 pattern = r"\b" + pattern
-            # Only apply word boundary if the keyword ends with an alphanumeric character
             if k_norm[-1].isalnum():
                 pattern = pattern + r"\b"
 
-            if re.search(pattern, t, flags=re.IGNORECASE):
-                return category
+            # 5 Points for a match in the Title / Tech Stack
+            if re.search(pattern, title, flags=re.IGNORECASE):
+                scores[category] += 5
 
-    return "Other"
+            # 1 Point for every time it's mentioned in the description
+            matches = re.findall(pattern, desc, flags=re.IGNORECASE)
+            scores[category] += len(matches)
+
+    # Find the category with the highest score
+    best_category = max(scores, key=scores.get)
+
+    # If no score is higher than 0, return "Other"
+    if scores[best_category] == 0:
+        return "Other"
+
+    return best_category
 
 
 def _fmt_date(raw: str) -> str:
@@ -208,7 +219,7 @@ def get_jobs(hours: int = 24, limit: int = 500):
             "URL":         r[11] or "",
             "Verified":    _fmt_verified(r[12]),
             "Description": (r[14] or "")[:300],
-            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}"),
+            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''}", r[14] or ""),
         })
 
     return JSONResponse(content=jobs)
@@ -251,7 +262,7 @@ def get_all_jobs(limit: int = 1000):
             "URL":         r[11] or "",
             "Verified":    _fmt_verified(r[12]),
             "Description": (r[14] or "")[:300],
-            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}"),
+            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''}", r[14] or ""),
         })
 
     return JSONResponse(content=jobs)

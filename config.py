@@ -214,12 +214,13 @@ CATEGORY_RULES = [
     ("Web Development", [
         "web developer", "frontend", "backend", "fullstack", "full stack",
         "react", "vue", "angular", "node", "javascript", "php",
-        "django", "flask", "nodejs",
+        "django", "flask", "nodejs", "python", "developer", "software engineer",
+        "engineer", "wordpress", "java", "ruby", "golang", "c#", "api"
     ]),
     ("Data Science & Analytics", [
         "data scientist", "data analyst", "data analytics", "analytics",
         "machine learning", "ml", "ml engineer",
-        "data", "tableau", "powerbi", "spark", "hadoop",
+        "data", "tableau", "powerbi", "spark", "hadoop", "python", "sql", "etl"
     ]),
     ("Graphics & UI/UX", [
         "ux designer", "ui ux", "ui/ux", "graphic designer", "motion graphic",
@@ -239,7 +240,7 @@ CATEGORY_RULES = [
     ]),
     ("Digital Marketing", [
         "digital marketing", "digital marketer", "seo", "social media", "content marketing",
-        "growth marketer", "social-media",
+        "growth marketer", "social-media", "email marketing",
     ]),
     ("Caregiver/Health Care Assistant", [
         "caregiver", "care assistant", "healthcare assistant", "home care", "care home",
