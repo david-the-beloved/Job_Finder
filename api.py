@@ -4,7 +4,8 @@ from database import get_connection, init_db
 import io
 import contextlib
 from datetime import datetime, timedelta
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
+import re
 from fastapi.responses import JSONResponse
 import uvicorn
 import sys
@@ -22,23 +23,22 @@ with contextlib.redirect_stdout(io.StringIO()):
 CATEGORY_RULES = [
     ("Web Design", [
         "web designer", "webflow", "figma", "ui designer", "website design",
-        "visual designer", "graphic design",
+        "visual designer", "graphic design", "brand designer", "brand design",
     ]),
     ("Web Development", [
         "web developer", "frontend", "backend", "fullstack", "full stack",
         "react", "vue", "angular", "node", "javascript", "php",
-        "developer", "software engineer", "engineer", "python", "django", "flask",
-        "java", "golang", "go", "ruby", "rails", "c#", "c++",
+        "django", "flask", "nodejs",
     ]),
     ("Data Science & Analytics", [
         "data scientist", "data analyst", "data analytics", "analytics",
         "machine learning", "ml", "ml engineer",
-        "python", "r", "sql", "tableau", "powerbi", "spark", "hadoop",
+        "data", "tableau", "powerbi", "spark", "hadoop",
     ]),
-    ("Graphics & UI/UX Design", [
+    ("Graphics & UI/UX", [
         "ux designer", "ui ux", "ui/ux", "graphic designer", "motion graphic",
-        "product designer", "visual design",
-        "figma", "sketch", "photoshop", "illustrator", "adobe",
+        "product designer", "visual design", "brand designer", "photoshop", "illustrator", "adobe",
+        "sketch",
     ]),
     ("Virtual Assistant", [
         "virtual assistant", "administrative assistant", "data entry", "va",
@@ -55,7 +55,7 @@ CATEGORY_RULES = [
         "digital marketing", "digital marketer", "seo", "social media", "content marketing",
         "growth marketer", "social-media",
     ]),
-    ("Caregiver / Health Care Assistant", [
+    ("Caregiver/Health Care Assistant", [
         "caregiver", "care assistant", "healthcare assistant", "home care", "care home",
         "nursing assistant", "health care assistant",
     ]),
@@ -84,6 +84,15 @@ def get_unsynced_jobs_api(limit: int = 500, min_quality: int = 1):
 
     jobs = []
     for r in rows:
+        try:
+            colnames = r.keys()
+        except Exception:
+            colnames = []
+        if 'category' in colnames and r['category']:
+            category = r['category']
+        else:
+            category = _categorise(r[2] or "")
+
         jobs.append({
             "ID":          r[0] or "",
             "Source":      r[1] or "",
@@ -99,7 +108,7 @@ def get_unsynced_jobs_api(limit: int = 500, min_quality: int = 1):
             "URL":         r[11] or "",
             "Verified":    _fmt_verified(r[12]),
             "Description": (r[14] or "")[:300],
-            "Category":    _categorise(r[2] or ""),
+            "Category":    category,
         })
 
     return JSONResponse(content=jobs)
@@ -122,10 +131,25 @@ def mark_jobs_synced(body: list[str]):
 
 
 def _categorise(title: str) -> str:
-    t = title.lower()
+    """
+    Categorise a title by checking each category's keywords using
+    word-boundary regex matching to avoid accidental substring matches
+    (e.g. the keyword 'r' matching 'brand'). Returns the first matching
+    category or 'Other'.
+    """
+    t = (title or "").lower()
     for category, keywords in CATEGORY_RULES:
-        if any(k in t for k in keywords):
-            return category
+        for k in keywords:
+            k_norm = (k or "").lower().strip()
+            if not k_norm:
+                continue
+            # Use word boundaries for alphanumeric keywords to avoid
+            # matching single letters as substrings inside other words.
+            # For keywords that include non-word chars (e.g. c#, c++),
+            # still escape and match literally.
+            pattern = r"\b" + re.escape(k_norm) + r"\b"
+            if re.search(pattern, t, flags=re.IGNORECASE):
+                return category
     return "Other"
 
 
@@ -278,6 +302,34 @@ def get_stats():
         "scams":      scams,
         "sources":    sources,
     }
+
+
+@app.get("/admin/category_preview")
+def admin_category_preview(limit: int = 500):
+    """
+    Return up to `limit` jobs from the DB along with the computed category
+    using the current `CATEGORY_RULES`. Protected by `ADMIN_TOKEN` header.
+    Use this to review how titles are classified.
+    """
+    # No auth required for preview endpoint per user request.
+
+    conn = get_connection()
+    rows = conn.execute("SELECT id, title, company, location, url FROM jobs ORDER BY date_found DESC LIMIT ?", (limit,)).fetchall()
+    conn.close()
+
+    out = []
+    for r in rows:
+        title = r[1] or ""
+        out.append({
+            "ID": r[0],
+            "Title": title,
+            "Company": r[2] or "",
+            "Location": r[3] or "",
+            "URL": r[4] or "",
+            "ComputedCategory": _categorise(title),
+        })
+
+    return JSONResponse(content=out)
 
 
 if __name__ == "__main__":
