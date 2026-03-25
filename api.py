@@ -84,14 +84,9 @@ def get_unsynced_jobs_api(limit: int = 500, min_quality: int = 1):
 
     jobs = []
     for r in rows:
-        try:
-            colnames = r.keys()
-        except Exception:
-            colnames = []
-        if 'category' in colnames and r['category']:
-            category = r['category']
-        else:
-            category = _categorise(r[2] or "")
+        # Always compute category from the title to keep API behaviour
+        # consistent (do not prefer a DB-stored `category` value).
+        category = _categorise(r[2] or "")
 
         jobs.append({
             "ID":          r[0] or "",
@@ -304,32 +299,8 @@ def get_stats():
     }
 
 
-@app.get("/admin/category_preview")
-def admin_category_preview(limit: int = 500):
-    """
-    Return up to `limit` jobs from the DB along with the computed category
-    using the current `CATEGORY_RULES`. Protected by `ADMIN_TOKEN` header.
-    Use this to review how titles are classified.
-    """
-    # No auth required for preview endpoint per user request.
-
-    conn = get_connection()
-    rows = conn.execute("SELECT id, title, company, location, url FROM jobs ORDER BY date_found DESC LIMIT ?", (limit,)).fetchall()
-    conn.close()
-
-    out = []
-    for r in rows:
-        title = r[1] or ""
-        out.append({
-            "ID": r[0],
-            "Title": title,
-            "Company": r[2] or "",
-            "Location": r[3] or "",
-            "URL": r[4] or "",
-            "ComputedCategory": _categorise(title),
-        })
-
-    return JSONResponse(content=out)
+# Admin endpoints removed per user request; API now always computes
+# categories from titles and does not expose admin preview.
 
 
 if __name__ == "__main__":
