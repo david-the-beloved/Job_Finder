@@ -1,5 +1,5 @@
 # api.py -- FastAPI HTTP endpoint for n8n to fetch jobs
-from config import MIN_QUALITY_SCORE
+from config import MIN_QUALITY_SCORE, CATEGORY_RULES
 from database import get_connection, init_db
 import io
 import contextlib
@@ -18,48 +18,6 @@ app = FastAPI(title="Job Scraper API")
 
 with contextlib.redirect_stdout(io.StringIO()):
     init_db()
-
-# ── Category Rules ────────────────────────────────────────────
-CATEGORY_RULES = [
-    ("Web Design", [
-        "web designer", "webflow", "figma", "ui designer", "website design",
-        "visual designer", "graphic design", "brand designer", "brand design",
-    ]),
-    ("Web Development", [
-        "web developer", "frontend", "backend", "fullstack", "full stack",
-        "react", "vue", "angular", "node", "javascript", "php",
-        "django", "flask", "nodejs",
-    ]),
-    ("Data Science & Analytics", [
-        "data scientist", "data analyst", "data analytics", "analytics",
-        "machine learning", "ml", "ml engineer",
-        "data", "tableau", "powerbi", "spark", "hadoop",
-    ]),
-    ("Graphics & UI/UX", [
-        "ux designer", "ui ux", "ui/ux", "graphic designer", "motion graphic",
-        "product designer", "visual design", "brand designer", "photoshop", "illustrator", "adobe",
-        "sketch",
-    ]),
-    ("Virtual Assistant", [
-        "virtual assistant", "administrative assistant", "data entry", "va",
-    ]),
-    ("Cybersecurity", [
-        "cybersecurity", "security analyst", "information security", "infosec",
-        "penetration", "pentest", "security engineer",
-        "cloud security", "sre", "soc",
-    ]),
-    ("Internship", [
-        "intern", "internship", "siwes", "trainee", "graduate",
-    ]),
-    ("Digital Marketing", [
-        "digital marketing", "digital marketer", "seo", "social media", "content marketing",
-        "growth marketer", "social-media",
-    ]),
-    ("Caregiver/Health Care Assistant", [
-        "caregiver", "care assistant", "healthcare assistant", "home care", "care home",
-        "nursing assistant", "health care assistant",
-    ]),
-]
 
 
 @app.get("/jobs/unsynced")
@@ -84,9 +42,8 @@ def get_unsynced_jobs_api(limit: int = 500, min_quality: int = 1):
 
     jobs = []
     for r in rows:
-        # Always compute category from the title to keep API behaviour
-        # consistent (do not prefer a DB-stored `category` value).
-        category = _categorise(r[2] or "")
+        # Check title, tech stack, and description for much better accuracy
+        category = _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}")
 
         jobs.append({
             "ID":          r[0] or "",
@@ -125,26 +82,32 @@ def mark_jobs_synced(body: list[str]):
     return JSONResponse(content={"updated": len(body)})
 
 
-def _categorise(title: str) -> str:
+def _categorise(text_to_check: str) -> str:
     """
-    Categorise a title by checking each category's keywords using
-    word-boundary regex matching to avoid accidental substring matches
-    (e.g. the keyword 'r' matching 'brand'). Returns the first matching
-    category or 'Other'.
+    Categorise by checking keywords against a combined text string.
+    Safely handles special characters like C++ or UI/UX.
     """
-    t = (title or "").lower()
+    t = (text_to_check or "").lower()
+
     for category, keywords in CATEGORY_RULES:
         for k in keywords:
             k_norm = (k or "").lower().strip()
             if not k_norm:
                 continue
-            # Use word boundaries for alphanumeric keywords to avoid
-            # matching single letters as substrings inside other words.
-            # For keywords that include non-word chars (e.g. c#, c++),
-            # still escape and match literally.
-            pattern = r"\b" + re.escape(k_norm) + r"\b"
+
+            # If keyword contains special characters at the edges, drop the \b constraint for that edge
+            pattern = re.escape(k_norm)
+
+            # Only apply word boundary if the keyword starts with an alphanumeric character
+            if k_norm[0].isalnum():
+                pattern = r"\b" + pattern
+            # Only apply word boundary if the keyword ends with an alphanumeric character
+            if k_norm[-1].isalnum():
+                pattern = pattern + r"\b"
+
             if re.search(pattern, t, flags=re.IGNORECASE):
                 return category
+
     return "Other"
 
 
@@ -217,7 +180,7 @@ def get_jobs(hours: int = 24, limit: int = 500):
             "URL":         r[11] or "",
             "Verified":    _fmt_verified(r[12]),
             "Description": (r[14] or "")[:300],
-            "Category":    _categorise(r[2] or ""),
+            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}"),
         })
 
     return JSONResponse(content=jobs)
@@ -260,7 +223,7 @@ def get_all_jobs(limit: int = 1000):
             "URL":         r[11] or "",
             "Verified":    _fmt_verified(r[12]),
             "Description": (r[14] or "")[:300],
-            "Category":    _categorise(r[2] or ""),
+            "Category":    _categorise(f"{r[2] or ''} {r[7] or ''} {r[14] or ''}"),
         })
 
     return JSONResponse(content=jobs)

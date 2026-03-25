@@ -47,7 +47,6 @@ JOBSPRESSO_FEEDS = [
 
 WORKING_NOMADS_FEEDS = [
     "https://www.workingnomads.co/api/exposed_jobs/"
-
 ]
 
 # Himalayas API queries used by the Himalayas scraper
@@ -205,3 +204,45 @@ ALLOWED_LOCATIONS = [
 
 # Toggle enforcement. Set False to disable location filtering.
 ENFORCE_LOCATION_FILTER = True
+
+# ── 8. CATEGORY RULES ─────────────────────────────────────────
+CATEGORY_RULES = [
+    ("Web Design", [
+        "web designer", "webflow", "figma", "ui designer", "website design",
+        "visual designer", "graphic design", "brand designer", "brand design",
+    ]),
+    ("Web Development", [
+        "web developer", "frontend", "backend", "fullstack", "full stack",
+        "react", "vue", "angular", "node", "javascript", "php",
+        "django", "flask", "nodejs",
+    ]),
+    ("Data Science & Analytics", [
+        "data scientist", "data analyst", "data analytics", "analytics",
+        "machine learning", "ml", "ml engineer",
+        "data", "tableau", "powerbi", "spark", "hadoop",
+    ]),
+    ("Graphics & UI/UX", [
+        "ux designer", "ui ux", "ui/ux", "graphic designer", "motion graphic",
+        "product designer", "visual design", "brand designer", "photoshop", "illustrator", "adobe",
+        "sketch",
+    ]),
+    ("Virtual Assistant", [
+        "virtual assistant", "administrative assistant", "data entry", "va",
+    ]),
+    ("Cybersecurity", [
+        "cybersecurity", "security analyst", "information security", "infosec",
+        "penetration", "pentest", "security engineer",
+        "cloud security", "sre", "soc",
+    ]),
+    ("Internship", [
+        "intern", "internship", "siwes", "trainee", "graduate",
+    ]),
+    ("Digital Marketing", [
+        "digital marketing", "digital marketer", "seo", "social media", "content marketing",
+        "growth marketer", "social-media",
+    ]),
+    ("Caregiver/Health Care Assistant", [
+        "caregiver", "care assistant", "healthcare assistant", "home care", "care home",
+        "nursing assistant", "health care assistant",
+    ]),
+]
