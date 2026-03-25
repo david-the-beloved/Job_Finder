@@ -4,12 +4,13 @@ from database import get_connection, init_db
 import io
 import contextlib
 from datetime import datetime, timedelta
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Header
 import re
 from fastapi.responses import JSONResponse
 import uvicorn
 import sys
 import os
+import subprocess
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -136,6 +137,33 @@ def _fmt_verified(val) -> str:
 def health():
     """Health check endpoint."""
     return {"status": "ok", "time": datetime.now().strftime("%Y-%m-%d %H:%M")}
+
+
+# ── Manual Trigger Route ──────────────────────────────────────
+
+def execute_scraper_script():
+    """The actual function that runs in the background"""
+    print("Manual scraper run triggered via API...")
+    subprocess.run(["python", "main.py", "--no-hn", "--no-verify"])
+    print("Manual scraper run complete.")
+
+
+@app.post("/run-scraper")
+def trigger_manual_scrape(background_tasks: BackgroundTasks, secret_key: str = Header(None)):
+    """
+    Endpoint to manually trigger the scraper. 
+    Requires a secret header so random people on the internet don't burn your AI credits!
+    """
+    # Change 'my-super-secret-password' to whatever you want
+    if secret_key != "skillboost":
+        raise HTTPException(
+            status_code=401, detail="Unauthorized. Nice try though!")
+
+    # This tells FastAPI to return a success message instantly,
+    # but run the heavy scraping script in the background.
+    background_tasks.add_task(execute_scraper_script)
+
+    return {"status": "success", "message": "Scraper started in the background. Check Railway logs for progress."}
 
 
 @app.get("/jobs")
