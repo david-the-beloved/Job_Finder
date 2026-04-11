@@ -151,19 +151,3 @@ Make sure each sheet tab uses the same header row so n8n can auto-map reliably.
 
 - Fork, create a feature branch, and submit a PR.
 - Keep scrapers focused: prefer official RSS/JSON APIs where available. Avoid scraping sites that disallow automation.
-
-## Contact / Next steps
-
-If you want, I can:
-
-- Generate an updated n8n JSON that batches multiple appended rows into a single `Mark Synced` call (better for efficiency).
-- Add example Google Sheets templates with the correct headers.
-- Add a small `docker-compose` to run the API + background job runner in containers.
-
-## License
-
-MIT (or change to your preferred license).
-
----
-
-README created to make onboarding and operation easier. If you'd like edits (tone, more detail, or included diagrams), tell me which sections to expand.
